@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from telegram import Update, Bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from pyqrcode import create as qr_create
 from io import BytesIO
 from PIL import Image
@@ -10,19 +10,15 @@ from PIL import Image
 load_dotenv()
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
-# Получаем номер порта из переменных окружения, если используется Render или аналогичный хостинг
-PORT = int(os.environ.get('PORT', '80'))  # Порт указывается платформой Render
+application = ApplicationBuilder().token(TOKEN).build()
 
-updater = Updater(token=TOKEN, use_context=True)
-dispatcher = updater.dispatcher
-
-def start_handler(update: Update, context: CallbackContext):
+async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда '/start': приветственное сообщение"""
     message = (
-        "Привет! Этот бот конвертирует ссылки в QR-коды.\n"
+        "Привет! Этот бот конвертирует ссылки в QR-коды.\\n"
         "Просто пришли ему ссылку и он сгенерирует тебе QR-код."
     )
-    update.message.reply_text(message)
+    await update.message.reply_text(message)
 
 def generate_qr(url: str) -> bytes:
     """Генерация QR-кода по ссылке"""
@@ -36,41 +32,40 @@ def generate_qr(url: str) -> bytes:
     new_buffer.seek(0)
     return new_buffer.read()
 
-def link_handler(update: Update, context: CallbackContext):
+async def link_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработка входящих сообщений"""
     text = update.message.text.strip()
     
     if not text.startswith("http"):
         # Сообщение не является ссылкой
         reply_message = "Пришли, пожалуйста, именно ссылку!"
-        update.message.reply_text(reply_message)
+        await update.message.reply_text(reply_message)
         return
     
     # Отправляем промежуточное сообщение о создании QR-кода
-    temp_msg = update.message.reply_text("Идёт создание QR-кода...")
+    temp_msg = await update.message.reply_text("Идёт создание QR-кода...")
     
     try:
         # Генерируем QR-код
         qr_image_bytes = generate_qr(text)
         
         # Удаляем промежуточное сообщение
-        context.bot.deleteMessage(chat_id=update.effective_chat.id, message_id=temp_msg.message_id)
+        await context.bot.deleteMessage(chat_id=update.effective_chat.id, message_id=temp_msg.message_id)
         
         # Отправляем полученный QR-код
-        update.message.reply_photo(photo=qr_image_bytes, caption=f"Ваш QR-код готов!")
+        await update.message.reply_photo(photo=qr_image_bytes, caption=f"Ваш QR-код готов!")
         
         # Завершаем обработку сообщением благодарности
         final_message = "Спасибо за использование нашего бота!"
-        update.message.reply_text(final_message)
+        await update.message.reply_text(final_message)
     except Exception as e:
         print(e)
         error_message = "Что-то пошло не так при обработке вашей ссылки :("
-        update.message.reply_text(error_message)
+        await update.message.reply_text(error_message)
 
 # Добавляем обработчики
-dispatcher.add_handler(CommandHandler('start', start_handler))
-dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, link_handler))
+application.add_handler(CommandHandler('start', start_handler))
+application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), link_handler))
 
-# Устанавливаем порт и начинаем работу
-updater.start_polling(port=PORT)
-updater.idle()
+# Запускаем бота
+application.run_polling()

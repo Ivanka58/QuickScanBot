@@ -1,5 +1,6 @@
 import os
 import telebot
+from urllib.parse import quote_plus
 from pyqrcode import create as qr_create
 from io import BytesIO
 from PIL import Image
@@ -15,9 +16,14 @@ def send_welcome(message):
         "Привет! Этот бот конвертирует ссылки в QR-коды.\\nПросто пришли ему ссылку и он сгенерирует тебе QR-код."
     )
 
+def prepare_url(url: str) -> str:
+    """Подготовка URL к безопасной передаче в QR-код"""
+    return quote_plus(url)
+
 def generate_qr(url: str) -> bytes:
     """Генерация QR-кода по ссылке."""
-    qr_code = qr_create(url)
+    safe_url = prepare_url(url)
+    qr_code = qr_create(safe_url)
     buffer = BytesIO()
     qr_code.png(buffer, scale=6)
     buffer.seek(0)

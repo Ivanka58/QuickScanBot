@@ -7,8 +7,8 @@ from fastapi import FastAPI
 import uvicorn
 
 # Получаем токен бота из переменных окружения Render
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = telebot.TeleBot(BOT_TOKEN)
+TOKEN = os.getenv("TG_TOKEN")
+bot = telebot.TeleBot(TOKEN)
 
 # Инициализируем FastAPI приложение
 app = FastAPI()
@@ -17,7 +17,7 @@ app = FastAPI()
 def send_welcome(message):
     bot.reply_to(
         message,
-        "Привет! Этот бот конвертирует ссылки в QR-коды.\nПросто пришли ему ссылку и он сгенерирует тебе QR-код."
+        "Привет! Этот бот конвертирует ссылки в QR-коды.\\nПросто пришли ему ссылку и он сгенерирует тебе QR-код."
     )
 
 def generate_qr(url: str) -> bytes:
@@ -42,7 +42,8 @@ def handle_link(message):
     
     if not text.startswith("http"):
         # Сообщение не является ссылкой
-        bot.reply_to(message, "Пришли, пожалуйста, именно ссылку!")
+        reply_message = "Пришли, пожалуйста, именно ссылку!"
+        bot.reply_to(message, reply_message)
         return
     
     # Отправляем промежуточное сообщение о создании QR-кода
@@ -73,5 +74,5 @@ async def root():
     return {"message": "Telegram QR Code Bot is running!"}
 
 if __name__ == "__main__":
-    PORT = int(os.getenv('PORT', 8080))
+    PORT = int(os.environ.get("PORT", 0))
     uvicorn.run(app, host="0.0.0.0", port=PORT)

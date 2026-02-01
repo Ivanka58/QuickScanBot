@@ -11,7 +11,7 @@ TOKEN = os.getenv("TG_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 # Инициализируем FastAPI приложение
-app = FastAPI)
+app = FastAPI()
 
 @app.route('/')
 def health():

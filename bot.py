@@ -1,8 +1,8 @@
-   import os
-   import telebot
-   import qrcode
-   from io import BytesIO
-   from PIL import Image
+import os
+import telebot
+import qrcode
+from io import BytesIO
+from PIL import Image
 
    # Получаем токен бота из переменных окружения Render
    BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -61,4 +61,3 @@
 
    # Запускаем бота
    bot.infinity_polling()
-   

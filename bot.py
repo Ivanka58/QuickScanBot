@@ -3,10 +3,15 @@ import telebot
 import qrcode
 from io import BytesIO
 from PIL import Image
+from fastapi import FastAPI
+import uvicorn
 
 # Получаем токен бота из переменных окружения Render
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
+
+# Инициализируем FastAPI приложение
+app = FastAPI()
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -61,3 +66,12 @@ def handle_link(message):
 
 # Запускаем бота
 bot.infinity_polling()
+
+# Настройка FastAPI для прослушивания порта
+@app.get("/")
+async def root():
+    return {"message": "Telegram QR Code Bot is running!"}
+
+if __name__ == "__main__":
+    PORT = int(os.getenv('PORT', 8080))
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

@@ -11,8 +11,15 @@ TOKEN = os.getenv("TG_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 # Инициализируем FastAPI приложение
-app = FastAPI()
+app = FastAPI)
 
+@app.route('/')
+def health():
+    return "Bot is alive", 200
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(
@@ -67,12 +74,3 @@ def handle_link(message):
 
 # Запускаем бота
 bot.infinity_polling()
-
-# Настройка FastAPI для прослушивания порта
-@app.get("/")
-async def root():
-    return {"message": "Telegram QR Code Bot is running!"}
-
-if __name__ == "__main__":
-    PORT = int(os.environ.get("PORT", 0))
-    uvicorn.run(app, host="0.0.0.0", port=PORT)

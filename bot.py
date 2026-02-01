@@ -3,23 +3,16 @@ import telebot
 import qrcode
 from io import BytesIO
 from PIL import Image
-from fastapi import FastAPI
-import uvicorn
+from flask import Flask
+import threading
 
 # Получаем токен бота из переменных окружения Render
 TOKEN = os.getenv("TG_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
-# Инициализируем FastAPI приложение
-app = FastAPI()
+# Инициализируем Flask приложение
+app = Flask(__name__)
 
-@app.route('/')
-def health():
-    return "Bot is alive", 200
-
-def run_flask():
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(
@@ -74,3 +67,16 @@ def handle_link(message):
 
 # Запускаем бота
 bot.infinity_polling()
+
+# Настройка Flask для прослушивания порта
+@app.route('/')
+def health():
+    return "Bot is alive", 200
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+if __name__ == '__main__':
+    threading.Thread(target=run_flask, daemon=True).start()
+    print("Бот запущен и мониторит канал...")
